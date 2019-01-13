@@ -15,6 +15,7 @@ const BUFFER_SIZE_B: usize = DUCK_SIZE_B * 1024 * 4096 * 2;
 const INDEX_SIZE: usize = 256 * 256 * 4;
 
 pub struct Trimmer {
+	trims: usize,
 	q: Queue,
 	program: Program,
 	buffer_a1: Buffer<u32>,
@@ -67,7 +68,11 @@ macro_rules! kernel_builder(
 ));
 
 impl Trimmer {
-	pub fn build(platform_name: Option<&str>, device_id: Option<usize>) -> ocl::Result<Trimmer> {
+	pub fn build(
+		platform_name: Option<&str>,
+		device_id: Option<usize>,
+		trims: usize,
+	) -> ocl::Result<Trimmer> {
 		env::set_var("GPU_MAX_HEAP_SIZE", "100");
 		env::set_var("GPU_USE_SYNC_OBJECTS", "1");
 		env::set_var("GPU_MAX_ALLOC_PERCENT", "100");
@@ -135,6 +140,7 @@ impl Trimmer {
 			.build()?;
 
 		Ok(Trimmer {
+			trims,
 			q,
 			program,
 			buffer_a1,
@@ -337,7 +343,7 @@ impl Trimmer {
 		kernel_enq!(kernel_round0, event_list, names, "roundN0");
 		clear_buffer!(self.buffer_i1);
 		kernel_enq!(kernel_round_nb, event_list, names, "roundNB");
-		for _ in 0..120 {
+		for _ in 0..self.trims {
 			clear_buffer!(self.buffer_i2);
 			kernel_enq!(kernel_round_na, event_list, names, "roundNA");
 			clear_buffer!(self.buffer_i1);

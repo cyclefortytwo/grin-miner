@@ -36,8 +36,9 @@ pub unsafe extern "C" fn create_solver_ctx(params: *mut SolverParams) -> *mut So
 		_ => None,
 	};
 	let device_id = Some((*params).device as usize);
+	let ntrims = (*params).ntrims as usize;
 
-	let trimmer = Trimmer::build(platform, device_id).expect("can't build trimmer");
+	let trimmer = Trimmer::build(platform, device_id, ntrims).expect("can't build trimmer");
 	let solver = Solver {
 		trimmer: trimmer,
 		graph: None,
@@ -63,6 +64,7 @@ pub unsafe extern "C" fn fill_default_params(params: *mut SolverParams) {
 	(*params).device = 0;
 	(*params).platform = 0;
 	(*params).edge_bits = 29;
+	(*params).ntrims = 120;
 }
 
 #[no_mangle]
